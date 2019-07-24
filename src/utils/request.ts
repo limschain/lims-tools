@@ -46,7 +46,7 @@ const request = extend({
   errorHandler, // 默认错误处理
   // credentials: 'include', // include: 默认请求带上cookie，但是会导致复杂的CORS（跨域请求问题）
   // prefix: 'https://imfly.local:3000/api/v1', // prefix
-  prefix: 'https://www.wcke.cn/api/v1', // prefix
+  prefix: 'http://www.wcke.cn/api/v1', // prefix
 });
 
 export default request;
