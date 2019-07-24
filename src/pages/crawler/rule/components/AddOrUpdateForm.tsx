@@ -2,17 +2,17 @@ import { Button, DatePicker, Form, Input, Modal, Select, Steps } from 'antd';
 import React, { Component } from 'react';
 
 import { FormComponentProps } from 'antd/es/form';
-import { TableListItem } from '../data.d';
+import { TableListItem } from '../data';
 import TableForm from './TableForm';
 
 export interface FormValsType extends Partial<TableListItem> {
   // frequency?: string;
 }
 
-export interface UpdateFormProps extends FormComponentProps {
-  handleUpdateModalVisible: (flag?: boolean, formVals?: FormValsType) => void;
-  handleUpdate: (values: FormValsType) => void;
-  updateModalVisible: boolean;
+export interface AddOrUpdateFormProps extends FormComponentProps {
+  handleAddOrUpdateModalVisible: (flag?: boolean, formVals?: FormValsType) => void;
+  handleAddOrUpdate: (values: FormValsType) => void;
+  addOrupdateModalVisible: boolean;
   values: Partial<TableListItem>; // FormValsType; //
 }
 const FormItem = Form.Item;
@@ -20,15 +20,15 @@ const { Step } = Steps;
 const { TextArea } = Input;
 const { Option } = Select;
 
-export interface UpdateFormState {
+export interface AddOrUpdateFormState {
   formVals: FormValsType;
   currentStep: number;
 }
 
-class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
+class AddOrUpdateForm extends Component<AddOrUpdateFormProps, AddOrUpdateFormState> {
   static defaultProps = {
-    handleUpdate: () => {},
-    handleUpdateModalVisible: () => {},
+    handleAddOrUpdate: () => {},
+    handleAddOrUpdateModalVisible: () => {},
     values: {},
   };
 
@@ -37,7 +37,7 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
     wrapperCol: { span: 13 },
   };
 
-  constructor(props: UpdateFormProps) {
+  constructor(props: AddOrUpdateFormProps) {
     super(props);
 
     this.state = {
@@ -47,7 +47,7 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
   }
 
   handleNext = (currentStep: number) => {
-    const { form, handleUpdate } = this.props;
+    const { form, handleAddOrUpdate } = this.props;
     const { formVals: oldValue } = this.state;
     form.validateFields((err, fieldsValue) => {
       if (err) return;
@@ -63,7 +63,7 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
           if (currentStep < 2) {
             this.forward();
           } else {
-            handleUpdate(formVals);
+            handleAddOrUpdate(formVals);
           }
         },
       );
@@ -149,13 +149,13 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
   };
 
   renderFooter = (currentStep: number) => {
-    const { handleUpdateModalVisible, values } = this.props;
+    const { handleAddOrUpdateModalVisible, values } = this.props;
     if (currentStep === 1) {
       return [
         <Button key="back" style={{ float: 'left' }} onClick={this.backward}>
           上一步
         </Button>,
-        <Button key="cancel" onClick={() => handleUpdateModalVisible(false, values)}>
+        <Button key="cancel" onClick={() => handleAddOrUpdateModalVisible(false, values)}>
           取消
         </Button>,
         <Button key="forward" type="primary" onClick={() => this.handleNext(currentStep)}>
@@ -168,7 +168,7 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
         <Button key="back" style={{ float: 'left' }} onClick={this.backward}>
           上一步
         </Button>,
-        <Button key="cancel" onClick={() => handleUpdateModalVisible(false, values)}>
+        <Button key="cancel" onClick={() => handleAddOrUpdateModalVisible(false, values)}>
           取消
         </Button>,
         <Button key="submit" type="primary" onClick={() => this.handleNext(currentStep)}>
@@ -177,7 +177,7 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
       ];
     }
     return [
-      <Button key="cancel" onClick={() => handleUpdateModalVisible(false, values)}>
+      <Button key="cancel" onClick={() => handleAddOrUpdateModalVisible(false, values)}>
         取消
       </Button>,
       <Button key="forward" type="primary" onClick={() => this.handleNext(currentStep)}>
@@ -187,7 +187,7 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
   };
 
   render() {
-    const { updateModalVisible, handleUpdateModalVisible, values } = this.props;
+    const { addOrupdateModalVisible, handleAddOrUpdateModalVisible, values } = this.props;
     const { currentStep, formVals } = this.state;
 
     return (
@@ -196,15 +196,15 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
         bodyStyle={{ padding: '32px 40px 48px' }}
         destroyOnClose
         title="规则配置"
-        visible={updateModalVisible}
+        visible={addOrupdateModalVisible}
         footer={this.renderFooter(currentStep)}
-        onCancel={() => handleUpdateModalVisible(false, values)}
-        afterClose={() => handleUpdateModalVisible()}
+        onCancel={() => handleAddOrUpdateModalVisible(false, values)}
+        afterClose={() => handleAddOrUpdateModalVisible()}
       >
         <Steps style={{ marginBottom: 28 }} size="small" current={currentStep}>
           <Step title="基本信息" />
-          <Step title="配置规则属性" />
-          <Step title="设定调度周期" />
+          <Step title="规则属性" />
+          <Step title="设定周期" />
         </Steps>
         {this.renderContent(currentStep, formVals)}
       </Modal>
@@ -212,4 +212,4 @@ class UpdateForm extends Component<UpdateFormProps, UpdateFormState> {
   }
 }
 
-export default Form.create<UpdateFormProps>()(UpdateForm);
+export default Form.create<AddOrUpdateFormProps>()(AddOrUpdateForm);

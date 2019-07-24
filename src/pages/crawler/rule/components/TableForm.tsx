@@ -5,13 +5,11 @@ import { isEqual } from 'lodash';
 import styles from '../style.less';
 
 interface TableFormDateType {
-  key: string;
+  key: number;
   field?: string;
   selector?: string;
-  detail?: string;
   isNew?: boolean;
   editing?: boolean;
-  detailType?: string; // fixme 暂时未使用
 }
 interface TableFormProps {
   loading?: boolean;
@@ -25,6 +23,18 @@ interface TableFormState {
   data?: TableFormDateType[];
 }
 class TableForm extends PureComponent<TableFormProps, TableFormState> {
+  constructor(props: TableFormProps) {
+    super(props);
+
+    // 修正key
+    const item: any = props.value && props.value.map((v, i) => (v.key = i));
+    this.state = {
+      data: item,
+      loading: false,
+      value: item,
+    };
+  }
+
   static getDerivedStateFromProps(nextProps: TableFormProps, preState: TableFormState) {
     if (isEqual(nextProps.value, preState.value)) {
       return null;
@@ -36,8 +46,6 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
   }
 
   clickedCancel: boolean = false;
-
-  index = 0;
 
   cacheOriginData = {};
 
@@ -81,25 +89,7 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
         return text;
       },
     },
-    {
-      title: '详情',
-      dataIndex: 'detail',
-      key: 'detail',
-      width: '30%',
-      render: (text: string, record: TableFormDateType) => {
-        if (record.editing) {
-          return (
-            <Input
-              value={text}
-              onChange={e => this.handleFieldChange(e, 'detail', record.key)}
-              onKeyPress={e => this.handleKeyPress(e, record.key)}
-              placeholder="无详情，请留空"
-            />
-          );
-        }
-        return text;
-      },
-    },
+
     {
       title: '操作',
       key: 'action',
@@ -141,21 +131,12 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
     },
   ];
 
-  constructor(props: TableFormProps) {
-    super(props);
-    this.state = {
-      data: props.value,
-      loading: false,
-      value: props.value,
-    };
-  }
-
-  getRowByKey(key: string, newData?: TableFormDateType[]) {
+  getRowByKey(key: number, newData?: TableFormDateType[]) {
     const { data = [] } = this.state;
     return (newData || data).filter(item => item.key === key)[0];
   }
 
-  toggleEditing = (e: React.MouseEvent | React.KeyboardEvent, key: string) => {
+  toggleEditing = (e: React.MouseEvent | React.KeyboardEvent, key: number) => {
     e.preventDefault();
     const { data = [] } = this.state;
     const newData = data.map(item => ({ ...item }));
@@ -173,19 +154,18 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
   newMember = () => {
     const { data = [] } = this.state;
     const newData = data.map(item => ({ ...item }));
+
     newData.push({
-      key: `${newData.length + 1}`,
+      key: newData.length, // key is index from 0
       field: '',
       selector: '',
       editing: true, // 辅助字段
       isNew: true,
-      detailType: 'html' // or ''
     });
-    // this.index += 1;
     this.setState({ data: newData });
   };
 
-  remove(key: string) {
+  remove(key: number) {
     const { data = [] } = this.state;
     const { onChange } = this.props;
     const newData = data.filter(item => item.key !== key);
@@ -195,13 +175,13 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
     }
   }
 
-  handleKeyPress(e: React.KeyboardEvent, key: string) {
+  handleKeyPress(e: React.KeyboardEvent, key: number) {
     if (e.key === 'Enter') {
       this.saveRow(e, key);
     }
   }
 
-  handleFieldChange(e: any, fieldName: string, key: string) {
+  handleFieldChange(e: any, fieldName: string, key: number) {
     const { data = [] } = this.state;
     const newData = [...data];
     const target = this.getRowByKey(key, newData);
@@ -211,7 +191,7 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
     }
   }
 
-  saveRow(e: React.MouseEvent | React.KeyboardEvent, key: string) {
+  saveRow(e: React.MouseEvent | React.KeyboardEvent, key: number) {
     e.persist();
     this.setState({
       loading: true,
@@ -243,7 +223,7 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
     }, 500);
   }
 
-  cancel(e: React.MouseEvent, key: string) {
+  cancel(e: React.MouseEvent, key: number) {
     this.clickedCancel = true;
     e.preventDefault();
     const { data = [] } = this.state;

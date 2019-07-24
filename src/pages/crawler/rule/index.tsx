@@ -25,7 +25,7 @@ import { connect } from 'dva';
 import moment from 'moment';
 import { StateType } from './model';
 import StandardTable, { StandardTableColumnProps } from './components/StandardTable';
-import UpdateForm, { FormValsType } from './components/UpdateForm';
+import AddOrUpdateForm, { FormValsType } from './components/AddOrUpdateForm';
 import { TableListItem, TableListPagination, TableListParams } from './data.d';
 
 import styles from './style.less';
@@ -50,7 +50,7 @@ interface TableListProps extends FormComponentProps {
 
 interface TableListState {
   isNew: boolean;
-  updateModalVisible: boolean;
+  addOrupdateModalVisible: boolean;
   expandForm: boolean;
   selectedRows: TableListItem[];
   formValues: { [key: string]: string };
@@ -79,7 +79,7 @@ class TableList extends Component<TableListProps, TableListState> {
 
   state: TableListState = {
     isNew: false,
-    updateModalVisible: false,
+    addOrupdateModalVisible: false,
     expandForm: false,
     selectedRows: [],
     formValues: {},
@@ -139,7 +139,7 @@ class TableList extends Component<TableListProps, TableListState> {
       title: '操作',
       render: (text, record) => (
         <Fragment>
-          <a onClick={() => this.handleUpdateModalVisible(true, record)}>修改</a>
+          <a onClick={() => this.handleAddOrUpdateModalVisible(true, record)}>修改</a>
           <Divider type="vertical" />
           <a onClick={() => this.handleCrawler(record)}>爬取</a>
         </Fragment>
@@ -257,16 +257,16 @@ class TableList extends Component<TableListProps, TableListState> {
     });
   };
 
-  handleUpdateModalVisible = (flag?: boolean, record?: Partial<TableListItem>) => {
+  handleAddOrUpdateModalVisible = (flag?: boolean, record?: Partial<TableListItem>) => {
     this.setState({
-      updateModalVisible: !!flag,
+      addOrupdateModalVisible: !!flag,
       stepFormValues: record || {},
       isNew: !record,
     });
   };
 
   // 区分是增加还是修改
-  handleUpdate = (fields: FormValsType) => {
+  handleAddOrUpdate = (fields: FormValsType) => {
     const { dispatch } = this.props;
     const { isNew } = this.state;
     if (isNew) {
@@ -285,7 +285,7 @@ class TableList extends Component<TableListProps, TableListState> {
       message.success('更新成功');
     }
 
-    this.handleUpdateModalVisible();
+    this.handleAddOrUpdateModalVisible();
   };
 
   handleCrawler(record: TableListItem): void {
@@ -293,7 +293,7 @@ class TableList extends Component<TableListProps, TableListState> {
     router.push(url);
 
     // message.success('爬取完成');
-    this.handleUpdateModalVisible();
+    this.handleAddOrUpdateModalVisible();
   }
 
   renderSimpleForm() {
@@ -420,7 +420,7 @@ class TableList extends Component<TableListProps, TableListState> {
       loading,
     } = this.props;
 
-    const { selectedRows, updateModalVisible, stepFormValues } = this.state;
+    const { selectedRows, addOrupdateModalVisible, stepFormValues } = this.state;
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
@@ -429,8 +429,8 @@ class TableList extends Component<TableListProps, TableListState> {
     );
 
     const updateMethods = {
-      handleUpdateModalVisible: this.handleUpdateModalVisible,
-      handleUpdate: this.handleUpdate,
+      handleAddOrUpdateModalVisible: this.handleAddOrUpdateModalVisible,
+      handleAddOrUpdate: this.handleAddOrUpdate,
     };
 
     return (
@@ -439,7 +439,7 @@ class TableList extends Component<TableListProps, TableListState> {
           <div className={styles.tableList}>
             <div className={styles.tableListForm}>{this.renderForm()}</div>
             <div className={styles.tableListOperator}>
-              <Button icon="plus" type="primary" onClick={() => this.handleUpdateModalVisible(true)}>
+              <Button icon="plus" type="primary" onClick={() => this.handleAddOrUpdateModalVisible(true)}>
                 新建
               </Button>
               {selectedRows.length > 0 && (
@@ -463,10 +463,10 @@ class TableList extends Component<TableListProps, TableListState> {
             />
           </div>
         </Card>
-        {updateModalVisible && (
-          <UpdateForm
+        {addOrupdateModalVisible && (
+          <AddOrUpdateForm
             {...updateMethods}
-            updateModalVisible={updateModalVisible}
+            addOrupdateModalVisible={addOrupdateModalVisible}
             values={stepFormValues}
           />
          )}

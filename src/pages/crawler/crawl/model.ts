@@ -34,22 +34,7 @@ const Model: ModelType = {
   namespace: 'crawlerCrawl',
 
   state: {
-    rule: {
-      key: 0,
-      disabled: false,
-      url: '',
-      name: '',
-      userId: '1',
-      desc: '',
-      callNo: 0,
-      status: 0,
-      updatedAt: new Date('2017-07-24'),
-      createdAt: new Date('2017-07-24'),
-      progress: 0,
-      options: '',
-      time: '',
-      frequency: '0',
-    },
+    rule: undefined,
     data: [],
     importMsg: ''
   },

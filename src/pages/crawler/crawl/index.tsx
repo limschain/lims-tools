@@ -20,13 +20,21 @@ import { RouteComponentProps } from 'dva/router';
 import { StateType } from './model';
 import { FormComponentProps } from 'antd/es/form';
 import ImportForm from './components/ImportForm';
+import { isEmpty, isEqual } from 'lodash';
 
 const { Step } = Steps;
 
 const getWindowWidth = () => window.innerWidth || document.documentElement.clientWidth;
 
-function description(item: any): React.ReactNode {
-  return (
+function description(item?: any): React.ReactNode {
+  return isEmpty(item) ?
+  (
+    <Descriptions className={styles.headerList} size="small" column={3}>
+      <Descriptions.Item className={styles.alert}>请选择或新建一条爬虫规则！</Descriptions.Item>
+    </Descriptions>
+  )
+  :
+  (
     <Descriptions className={styles.headerList} size="small" column={3}>
       <Descriptions.Item label="规则名称">{item.name}</Descriptions.Item>
       <Descriptions.Item label="规则描述">{item.desc}</Descriptions.Item>
@@ -114,17 +122,24 @@ class Crawl extends Component<IProps, IState> {
   };
 
   componentDidMount() {
-    const { dispatch, match } = this.props;
-    dispatch({
-      type: 'crawlerCrawl/fetchRuleById',
-      payload: match.params,
-    });
+    const { dispatch, match, crawlerCrawl } = this.props;
+
+    if (isEqual(match.params.id, ':id')) {
+      crawlerCrawl.rule = undefined;
+      this.setState({});
+    } else {
+      dispatch({
+        type: 'crawlerCrawl/fetchRuleById',
+        payload: match.params,
+      });
+    }
 
     this.setStepDirection();
     window.addEventListener('resize', this.setStepDirection, { passive: true });
   }
 
   componentWillUnmount() {
+    this.setState({});
     window.removeEventListener('resize', this.setStepDirection);
   }
 
@@ -216,7 +231,6 @@ class Crawl extends Component<IProps, IState> {
   );
 
   columns = (rule?: any) => {
-    // const { crawlerCrawl } = this.props;
     let options: any[] = [];
 
     if (rule && rule.options.length > 0) {
@@ -242,9 +256,6 @@ class Crawl extends Component<IProps, IState> {
             key: item.field,
             render: (text: string) => {
               if (text && text.length > 200) {
-                console.log('====================================');
-                console.log(text);
-                console.log('====================================');
                 return '内容太长，暂时隐藏'
               } else {
                 return text;
