@@ -1,5 +1,6 @@
 import { Button, DatePicker, Form, Input, Modal, Select, Steps } from 'antd';
 import React, { Component } from 'react';
+import moment from 'moment';
 
 import { FormComponentProps } from 'antd/es/form';
 import { TableListItem } from '../data';
@@ -84,7 +85,6 @@ class AddOrUpdateForm extends Component<AddOrUpdateFormProps, AddOrUpdateFormSta
     });
   };
 
-
   renderContent = (currentStep: number, formVals: FormValsType) => {
     const {
       form,
@@ -104,6 +104,7 @@ class AddOrUpdateForm extends Component<AddOrUpdateFormProps, AddOrUpdateFormSta
         <FormItem key="time" {...this.formLayout} label="开始时间">
           {form.getFieldDecorator('time', {
             rules: [{ required: true, message: '请选择开始时间！' }],
+            initialValue: moment(formVals.time, "YYYY-MM-DD HH:mm:ss"),
           })(
             <DatePicker
               style={{ width: '100%' }}
@@ -113,7 +114,7 @@ class AddOrUpdateForm extends Component<AddOrUpdateFormProps, AddOrUpdateFormSta
             />,
           )}
         </FormItem>,
-        <FormItem key="frequency" {...this.formLayout} label="调度周期">
+        <FormItem key="frequency" {...this.formLayout} label="爬取周期">
           {form.getFieldDecorator('frequency', {
             initialValue: formVals.frequency,
           })(

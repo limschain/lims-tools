@@ -38,3 +38,5 @@ screenshot
 .eslintcache
 
 build
+deploy
+lims-tools.tar.gz

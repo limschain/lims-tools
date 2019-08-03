@@ -38,9 +38,9 @@ const getValue = (obj: { [x: string]: string[] }) =>
     .map(key => obj[key])
     .join(',');
 
-type IStatusMapType = 'default' | 'processing' | 'success' | 'error';
-const statusMap = ['default', 'processing', 'success', 'error'];
-const status = ['关闭', '运行中', '已上线', '异常'];
+type IStatusMapType = 'default' | 'auto' | 'processing' | 'error';
+const statusMap = ['default', 'auto', 'processing', 'error'];
+const status = ['手动', '自动', '运行中', '异常'];
 
 interface TableListProps extends FormComponentProps {
   dispatch: Dispatch<any>;
@@ -76,6 +76,19 @@ interface TableListState {
 )
 
 class TableList extends Component<TableListProps, TableListState> {
+  private setNewRuleRecord(): any {
+    const options = ['startSelect', 'paginate', 'limit', 'item'].map((v, i) => {
+      return {
+        key: i,
+        field: v,
+        selector: '',
+        filter: '',
+        editing: false,
+      };
+    });
+
+    return { options };
+  }
 
   state: TableListState = {
     isNew: false,
@@ -96,7 +109,7 @@ class TableList extends Component<TableListProps, TableListState> {
       dataIndex: 'desc',
     },
     {
-      title: '服务调用次数',
+      title: '调用次数',
       dataIndex: 'callNo',
       sorter: true,
       align: 'right',
@@ -130,16 +143,24 @@ class TableList extends Component<TableListProps, TableListState> {
       },
     },
     {
-      title: '上次调度时间',
+      title: '规则更新',
       dataIndex: 'updatedAt',
       sorter: true,
-      render: (val: string) => <span>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</span>,
+      render: (val: string) => <span>{moment(val, 'YYYY-MM-DD HH:mm:ss').fromNow()}</span>,
+    },
+    {
+      title: '自动爬取',
+      dataIndex: 'time',
+      sorter: true,
+      render: (val: string) => <span>{moment(val, 'YYYY-MM-DD HH:mm:ss').fromNow()}</span>,
     },
     {
       title: '操作',
       render: (text, record) => (
         <Fragment>
-          <a onClick={() => this.handleAddOrUpdateModalVisible(true, record)}>修改</a>
+          <a onClick={() => this.handleAddOrUpdateModalVisible(true, record)}>编辑</a>
+          <Divider type="vertical" />
+          <a onClick={() => this.handleClone(record)}>克隆</a>
           <Divider type="vertical" />
           <a onClick={() => this.handleCrawler(record)}>爬取</a>
         </Fragment>
@@ -260,9 +281,27 @@ class TableList extends Component<TableListProps, TableListState> {
   handleAddOrUpdateModalVisible = (flag?: boolean, record?: Partial<TableListItem>) => {
     this.setState({
       addOrupdateModalVisible: !!flag,
-      stepFormValues: record || {},
+      stepFormValues: record || this.setNewRuleRecord(),
       isNew: !record,
     });
+  };
+
+  handleClone = (record: Partial<TableListItem>) => {
+    delete record.id;
+
+    // 直接写入会出错，后台将其string化了
+    if (record.options) {
+      record.options = JSON.parse(record.options);
+    }
+
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'crawlerRule/add',
+      payload: record,
+    });
+
+    message.success('克隆完成');
+    this.handleAddOrUpdateModalVisible();
   };
 
   // 区分是增加还是修改
@@ -424,11 +463,11 @@ class TableList extends Component<TableListProps, TableListState> {
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
-        <Menu.Item key="approval">批量审批</Menu.Item>
+        <Menu.Item key="approval">审批</Menu.Item>
       </Menu>
     );
 
-    const updateMethods = {
+    const addOrUpdateMethods = {
       handleAddOrUpdateModalVisible: this.handleAddOrUpdateModalVisible,
       handleAddOrUpdate: this.handleAddOrUpdate,
     };
@@ -444,10 +483,9 @@ class TableList extends Component<TableListProps, TableListState> {
               </Button>
               {selectedRows.length > 0 && (
                 <span>
-                  <Button>批量操作</Button>
                   <Dropdown overlay={menu}>
                     <Button>
-                      更多操作 <Icon type="down" />
+                      批量操作 <Icon type="down" />
                     </Button>
                   </Dropdown>
                 </span>
@@ -465,7 +503,7 @@ class TableList extends Component<TableListProps, TableListState> {
         </Card>
         {addOrupdateModalVisible && (
           <AddOrUpdateForm
-            {...updateMethods}
+            {...addOrUpdateMethods}
             addOrupdateModalVisible={addOrupdateModalVisible}
             values={stepFormValues}
           />

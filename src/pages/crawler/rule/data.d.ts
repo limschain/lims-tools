@@ -1,4 +1,5 @@
 export interface TableListItem {
+  id?: number;
   key: number;
   disabled?: boolean;
   url: string;

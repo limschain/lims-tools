@@ -1,13 +1,15 @@
-import { Button, Divider, Input, Popconfirm, Table, message } from 'antd';
+import { Button, Divider, Input, Popconfirm, Table, message, Select } from 'antd';
 import React, { Fragment, PureComponent } from 'react';
 
 import { isEqual } from 'lodash';
 import styles from '../style.less';
+const { Option } = Select;
 
 interface TableFormDateType {
   key: number;
   field?: string;
   selector?: string;
+  filter?: string;
   isNew?: boolean;
   editing?: boolean;
 }
@@ -26,12 +28,10 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
   constructor(props: TableFormProps) {
     super(props);
 
-    // 修正key
-    const item: any = props.value && props.value.map((v, i) => (v.key = i));
     this.state = {
-      data: item,
+      data: props.value,
       loading: false,
-      value: item,
+      value: props.value,
     };
   }
 
@@ -89,7 +89,27 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
         return text;
       },
     },
-
+    {
+      title: '过滤器',
+      dataIndex: 'filter',
+      key: 'filter',
+      width: '20%',
+      render: (text: string, record: TableFormDateType) => {
+        if (record.editing) {
+          return (
+            <Select
+            placeholder="过滤器"
+            defaultValue={text}
+            onChange={e => this.handleFieldChange(e, 'filter', record.key)}
+            style={{ width: '100%' }}>
+              <Option value="email">E-mail</Option>
+              <Option value="telephone">电话号码</Option>
+            </Select>
+          );
+        }
+        return text;
+      },
+    },
     {
       title: '操作',
       key: 'action',
@@ -98,7 +118,7 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
         if (!!record.editing && loading) {
           return null;
         }
-        if (record.editing) {
+        if (!!record.editing) {
           if (record.isNew) {
             return (
               <span>
@@ -141,6 +161,7 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
     const { data = [] } = this.state;
     const newData = data.map(item => ({ ...item }));
     const target = this.getRowByKey(key, newData);
+
     if (target) {
       // 进入编辑状态时保存原始数据
       if (!target.editing) {
@@ -159,16 +180,25 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
       key: newData.length, // key is index from 0
       field: '',
       selector: '',
+      filter: '',
       editing: true, // 辅助字段
       isNew: true,
     });
     this.setState({ data: newData });
   };
 
+  keyRefresh(data: any[]) {
+    return data.map((v, i) => {
+      v.key = i;
+      return v;
+    });
+  }
+
   remove(key: number) {
     const { data = [] } = this.state;
     const { onChange } = this.props;
     const newData = data.filter(item => item.key !== key);
+    this.keyRefresh(newData);
     this.setState({ data: newData });
     if (onChange) {
       onChange(newData);
@@ -182,11 +212,12 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
   }
 
   handleFieldChange(e: any, fieldName: string, key: number) {
+    const value = !!e.target ? e.target.value : e;
     const { data = [] } = this.state;
     const newData = [...data];
     const target = this.getRowByKey(key, newData);
     if (target) {
-      target[fieldName] = e.target.value;
+      target[fieldName] = value;
       this.setState({ data: newData });
     }
   }
@@ -227,19 +258,24 @@ class TableForm extends PureComponent<TableFormProps, TableFormState> {
     this.clickedCancel = true;
     e.preventDefault();
     const { data = [] } = this.state;
-    const newData = [...data];
-    newData.map(item => {
+    const oldData = [...data];
+
+    const newData = oldData.map(item => {
       if (item.key === key) {
         if (this.cacheOriginData[key]) {
-          delete this.cacheOriginData[key];
-          return {
+          let value = {
             ...item,
-            ...this.cacheOriginData[key],
-            editing: false,
+            ...this.cacheOriginData[key], // 恢复到原始状态
+            editing: false, // 改变编辑状态
           };
+
+          delete this.cacheOriginData[key]; // 删除原始值
+
+          return value;
         }
+      } else {
+        return item;
       }
-      return item;
     });
 
     this.setState({ data: newData });

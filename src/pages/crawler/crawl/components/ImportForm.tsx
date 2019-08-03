@@ -1,11 +1,13 @@
 import React, { PureComponent } from 'react';
 
-import { Modal, Form, Select } from 'antd';
+import { Modal, Form, Select, Input } from 'antd';
 import styles from './style.less';
 import { FormComponentProps } from 'antd/es/form';
 import Table from 'antd/es/table';
 import { invertKeyValues } from '@/utils/utils';
 const Option = Select.Option;
+const { TextArea } = Input;
+
 // fixme: 这里不会写死，以后放在数据库里，面向不同的导入对象，用户可以任意设置
 const targetFieldValues = ['title', 'date', 'summary', 'desc', 'content',
 'mobiContent', 'author', 'source', 'keyword', 'browserTitle',
@@ -59,30 +61,35 @@ class ImportForm extends PureComponent<ImportFormProps, ImportFormState> {
     {
       title: '抓取字段名',
       dataIndex: 'name',
-      width: 150,
+      width: 20,
     },
     {
       title: '抓取字段值',
       dataIndex: 'value',
-      width: 150,
+      width: 280,
       render: (text: string) => {
         if (text && text.length > 200) {
-          return '内容太长，暂时隐藏'
+          return (<TextArea rows={10} placeholder="请输入至少3个字符" value={text}/>)
         } else {
-          return text;
+          return (<Input placeholder="请输入" value={text}/>);
         }
       },
     },
     {
       title: '导入字段名',
-      width: 200,
-      render: (record: any) => (
-        <Select size='small' placeholder="请选择" style={{ width: '100%' }} onChange={(value) => this.handleSelect(value, record)}>
+      width: 100,
+      render: (record: any) => {
+        let defaultValue;
+        if (targetFieldValues.includes(record.name)) {
+          defaultValue = record.name;
+        }
+
+        return (<Select size='small' defaultValue={defaultValue} placeholder="请选择" style={{ width: '100%' }} onChange={(value) => this.handleSelect(value, record)}>
           {targetFieldValues.map(field => (
             <Option key={field}>{field}</Option>
           ))}
         </Select>
-      ),
+      )},
     },
   ]
   render() {

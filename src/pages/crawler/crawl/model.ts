@@ -58,6 +58,9 @@ const Model: ModelType = {
       if (callback) callback(response);
     },
     *importPost({ payload, callback }, { call, put }) {
+      console.log('====================================');
+      console.log(payload);
+      console.log('====================================');
       const response = yield call(importPost, payload);
 
       yield put({
